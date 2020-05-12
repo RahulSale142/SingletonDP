@@ -1,0 +1,262 @@
+doors to break singleton java class
+1) new operator
+2) multithreading env
+3)cloning process
+4)deserialization
+5)Using reflection api
+
+solution for multithreaded env of singleton java class
+======================================================
+1) use synchronisation (best solution)(synchronized block is good with double null check) 
+2) Eager instantiation
+
+Printer.class gives java.lang.Class having Printer class name as the data of object
+
+
+breaking singleton class pattern by using clonig concept
+========================================================
+
+cloning - > creating new object having existing object state as the initial state .
+            - > creating replica of existing object.
+
+Singleton design pattern falls under creation design pattern(GOF)
+
+Singleton design pattern is creation design pattern bcz its talks about
+object creation.
+
+Shallow cloning ==> new object will be created with initial state of existing object and thereonwards every object 
+will behaves indivisually.
+===================================================|
+protected Object clone() CloneNotSupportedException|
+===================================================|
+clone method is given protected in object class i.e it can be invoked only from direct sub classes
+of java.lang.Object class.
+
+since the new object or duplicate object created through cloning process will have invoking existing object state
+as initial state so there is no need of seperate initialization  for the object i.e creted through cloning
+so jvm do not invoke constructor
+
+we can also do cloning on cloned oject.
+
+to stop cloning on singleton java class object
+
+	//solving cloning problem of singleton(recommended)
+	@Override
+	public Object clone()throws CloneNotSupportedException{
+		throw new CloneNotSupportedException("Cloning is not allowed on this singleton class");
+	}
+
+
+Serialization
+==============
+	it the process of converting object data into bit and bytes so that the same object 
+	data can we send over the network as bits and bytes and can be writtern to fils as bits ans bytes.
+
+	==> flip-kart sends card details to paypal as serializable object data
+	==> Mobile games writes top 10 scores to file as serializable object data.
+	==>
+	
+we need support of stream to write the data of serialized object to file and also for Deserialization.
+
+	high level stream..
+	ObjectOutputStream ===> for Serialization
+	ObjectInputStream ====> for Deserialization
+
+	high level stream internally take the support of low level stram to complete read and write operation
+	of the dest files.
+
+	FileInputStream, FileOutputStream and etc low level streams these stram can deal with only bytes and chars..
+
+	ObjectOutputStream , ObjectIputStream , DataOutputStream, DataInputStream and etc are high level stram
+	highlevel stream 
+
+
+	Sample code for Serialization
+	=============================
+
+	public class Student implements Serializable{
+		private static fial long serialVersionUID=43434L; (recommended to write explicitly)
+		private int sno;
+		private String sname;
+
+		public void assignData(int sno, String sname){
+			this.sno = sno;
+			this.snme = sname;
+		}
+
+		//toString()
+	}
+
+	in app (for serialization)
+	=========================
+	Student st = new Student();
+	st.assignData(101, "Rahul");
+
+	ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(stud.ser));
+	oos.writeObject(st);
+	oos.flush();
+	oos.close();
+
+	in app2.java
+	=============
+	ObjectInputStream ois = new ObjectInputStream(new FileInputStream(stud.ser));
+	Student st = (Student)ois.readObject();
+
+Breaking singleton java class using Reflection API
+===================================================
+	java.lang.reflect and its sub packages together is called reflection api.
+	reflection api applications are mirror divices which gived inter details given java class/interface/
+	enum/annotation dynamically and they can be used as input in the same application.
+
+	Limitations of new operator
+	===========================
+	Test t = new Test();
+
+	servlet conatainer, IOC container EJB container and etc are creating there component classes objects 
+	not by using new operator bezoz they get there componenet classes dynamically at runtime.
+	They use newInstance() of java.lang.Class for creating object.
+
+	create Test class object using newInstance() method
+
+	Class c = Class.forName("Test");
+
+Accessing the private constructor of singleton class outside class using reflection api and creating the object y breaking
+singleton behavoiur
+	//load the class
+	Clss c = Class.forName("com.rahul.dp.Printer");
+	//get constructor of the loaded class
+	Constructor cons[] = c.getDeclaredConstructors();
+
+	//each object of Constructor class represents  one constructor of java class.
+
+	//get access to private constructor
+	cons[0].setAccessible(true); //breaking encapsulation
+
+	//create the object
+	Printer p1 = (Printer)cons[0].newInstance();
+
+Accessing private constructor of singleton class outside class using reflection api and creating the object
+by breaking the singleton behaviour  
+============================================================================================================
+
+	//load the class
+	Class c = Class.forName("com.rahul.Printer");
+	//get constructor of loaded class
+	Constructor cons[] = c.getDeclaredConstructor();
+	//get access to private constructor
+	cons[0].setAccessible(true); // breaking encapsulation
+	//create the object
+	Printer p1 = (Printer)cons[0].newInstance();
+	
+
+	solution for reflection api
+	===========================
+	private static boolean flag = false;
+	private Printer(){
+		if(flag == true){
+			throw new IllegalArgumentException("Object already created.");
+		}
+		flag = true;
+		System.out.println("");
+	}
+
+
+where should we take java class as singleton java class?
+========================================================
+			(or)
+Realtime user cases of singleton java class
+==============================================
+ans=> when class is not having satet
+b) when class is having only read only state
+c) when class is having only sharable state in synchrinized env.
+
+a) when class is not having state
+==================================
+	problem code
+	===========
+
+	public class Arithematic{
+		public int sum(int x, int y){
+			return x+y;
+		}
+	
+
+	solution
+	=========
+
+	public enum Arithematic{
+		INSTANCE;
+
+		public int sum(int x, int y){
+			return x+y;
+		}
+	}
+
+b) when class is having only read only state
+	problem code
+	============
+
+	public class Circle{
+	   private final float PI = 3.14f;
+	   
+	   public float calcRadius(float radius){
+		return PI*radius*radius;
+	   }
+	}
+
+	solution
+	========
+
+	public enum Circle{
+		private final float PI = 3.14f;
+		INSTANCE;
+		public float calArea(float radius){
+			return PI*radius*radius;
+		}
+	}
+
+	traditional approach
+	====================
+	public class Circle{
+		private static Circle INSTANCE;
+		private static final float PI = 3.14;
+		private Circle(){
+		
+		}
+
+		public static Circle getInstance(){
+			if(INSTANCE == null){
+				INSTANCE = new Circle();
+			}
+			return INSTANCE;
+		}
+
+		public float calArea(float radius){
+			return PI*radius*radius;
+		} 
+	}
+
+	usecase
+	=======
+	cache
+
+c) when class is having sharable state across multiple classes  
+=======================================
+problem
+=======
+	
+	pool = > it is set of same items
+	it gives the reusability of same items.
+	take the support of List collection to implement the pool
+
+	cache/buffer =>  
+
+	it geves the reusablity of different items
+
+	[
+	take the support of  map collection to implement Map collection
+	to implement this cache.
+	]
+
+problem
+==========
